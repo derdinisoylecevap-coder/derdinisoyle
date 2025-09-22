@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Derdini Söyle</title>
+  <style>
+    :root {
+      --bg: #111;
+      --sidebar: #1a1a1a;
+      --panel: #222;
+      --text: #eee;
+      --muted: #bbb;
+      --accent: #4cafef;
+      --accent-hover: #368fd6;
+      --err: #ff5252;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+    }
+
+    /* Sol Kenar Çubuğu */
+    .sidebar {
+      width: 250px;
+      background: var(--sidebar);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.3s ease;
+    }
+    .sidebar h2 {
+      font-size: 16px;
+      margin: 40px 0 15px;
+      color: var(--muted);
+    }
+    .sidebar .history {
+      flex: 1;
+      overflow-y: auto;
+    }
+    .sidebar .history p {
+      font-size: 14px;
+      margin: 8px 0;
+      color: var(--muted);
+      cursor: not-allowed;
+    }
+
+    .sidebar-toggle {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      font-size: 20px;
+      background: none;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      z-index: 100;
+    }
+
+    .sidebar.closed {
+      transform: translateX(-100%);
+    }
+
+    /* Ana İçerik */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 20px;
+    }
+
+    /* Sağ üst profil butonu */
+    .profile-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--panel);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    /* Mesaj alanı */
+    .input-container {
+      position: relative; /* başlık için referans */
+      display: flex;
+      align-items: flex-end;
+      background: var(--panel);
+      border-radius: 20px;
+      padding: 8px;
+      width: 100%;
+      max-width: 768px;
+      gap: 10px;
+      margin-left: -2cm; /* 2 cm sola kaydırıldı */
+    }
+
+    /* Başlık */
+    .input-container h1 {
+      position: absolute;
+      top: -1cm;   /* mesaj alanının 1 cm üstünde */
+      left: 50%;
+      transform: translateX(-50%);
+      font-weight: 400;
+      font-size: 26px;
+      margin: 0;
+      color: #fff;
+    }
+
+    .input-container textarea {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text);
+      font-size: 16px;
+      resize: none;
+      max-height: 200px;
+      line-height: 1.4;
+    }
+
+    .input-container button {
+      background: var(--accent);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+      color: #fff;
+      cursor: pointer;
+    }
+    .input-container button:hover {
+      background: var(--accent-hover);
+    }
+
+    /* + Butonu */
+    .plus-btn {
+      background: none;
+      color: var(--muted);
+      font-size: 28px;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+    }
+    .plus-btn input {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    /* Email kutusu */
+    #email-box {
+      display: none;
+      margin-top: 12px;
+      width: 100%;
+      max-width: 768px;
+      margin-left: -2cm; /* mesaj kutusuyla aynı sola kayma */
+    }
+    #email-box input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 15px;
+      border: none;
+      outline: none;
+      font-size: 14px;
+      color: #111;
+    }
+
+    /* Loader */
+    .loader {
+      display: none;
+      margin-top: 10px;
+      color: var(--accent);
+      font-size: 14px;
+    }
+    .loader span {
+      display: inline-block;
+      animation: blink 1s infinite alternate;
+    }
+    @keyframes blink {
+      from { opacity: .2; }
+      to { opacity: 1; }
+    }
+
+    /* Mesajlar */
+    .message {
+      margin-top: 10px;
+      font-size: 15px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .message.show {
+      opacity: 1;
+    }
+    .message.success { color: var(--accent); }
+    .message.error { color: var(--err); }
+  </style>
+</head>
+<body>
+  <!-- Sol Kenar Çubuğu -->
+  <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+  <div class="sidebar closed" id="sidebar">
+    <h2>Geçmiş Dertler</h2>
+    <div class="history">
+      <p>Henüz aktif değil</p>
+      <p>Üyelik sonrası kullanılacak</p>
+    </div>
+  </div>
+
+  <!-- Ana Alan -->
+  <div class="main">
+    <div class="profile-btn">👤</div>
+
+    <div class="input-container">
+      <!-- Başlık -->
+      <h1>Derdini Söyle</h1>
+
+      <!-- + Butonu dosya yükleme -->
+      <label class="plus-btn">
+        +
+        <input type="file" id="fileInput" accept="image/*" />
+      </label>
+
+      <textarea id="derdi" placeholder="Herhangi bir şey yaz..." rows="1"></textarea>
+      <button onclick="gonder()">➤</button>
+    </div>
+
+    <div id="email-box">
+      <input id="email" type="email" placeholder="Mail adresinizi buraya yazın">
+    </div>
+
+    <div class="loader" id="loader">Mesajınız gönderiliyor <span>...</span></div>
+    <div class="message" id="mesaj"></div>
+  </div>
+
+  <script>
+  const textarea = document.getElementById("derdi");
+  textarea.addEventListener("input", autoResize);
+  function autoResize() {
+    textarea.style.height = "auto";
+    textarea.style.height = textarea.scrollHeight + "px";
+  }
+
+  function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("closed");
+  }
+
+  function showMessage(text, type) {
+    const mesajDiv = document.getElementById("mesaj");
+    mesajDiv.textContent = text;
+    mesajDiv.className = "message " + type + " show";
+    setTimeout(() => { mesajDiv.classList.remove("show"); }, 3000);
+  }
+
+  function showLoader(show) {
+    document.getElementById("loader").style.display = show ? "block" : "none";
+  }
+
+  async function gonder() {
+    const input = document.getElementById("derdi");
+    const emailBox = document.getElementById("email-box");
+    const emailInput = document.getElementById("email");
+    const fileInput = document.getElementById("fileInput");
+    const mesaj = input.value.trim();
+
+    if (!mesaj) {
+      showMessage("Lütfen bir şey yazın.", "error");
+      return;
+    }
+
+    if (emailBox.style.display === "none" || emailBox.style.display === "") {
+      emailBox.style.display = "block";
+      showMessage("Lütfen mail adresinizi girin ve tekrar gönderin.", "error");
+      return;
+    }
+
+    const email = emailInput.value.trim();
+    if (!email) {
+      showMessage("Mail adresi girmelisiniz.", "error");
+      return;
+    }
+
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      if (file.size > 2 * 1024 * 1024) {
+        showMessage("Dosya boyutu 2MB'den küçük olmalı.", "error");
+        return;
+      }
+    }
+
+    try {
+      showLoader(true);
+
+      // JSON yerine FormData
+      const fd = new FormData();
+      fd.append("email", email);
+      fd.append("mesaj", mesaj);
+      if (fileInput.files.length > 0) {
+        fd.append("file", fileInput.files[0]);
+      }
+
+      const res = await fetch("http://localhost:3001/gonder", {
+        method: "POST",
+        body: fd
+      });
+
+      showLoader(false);
+
+      if (res.ok) {
+        showMessage("Mesajınız gönderildi!", "success");
+        input.value = "";
+        emailInput.value = "";
+        fileInput.value = "";
+        emailBox.style.display = "none";
+        input.style.height = "auto";
+      } else {
+        showMessage("Hata: Mesaj gönderilemedi.", "error");
+      }
+    } catch (err) {
+      showLoader(false);
+      showMessage("Sunucuya bağlanılamadı.", "error");
+    }
+  }
+</script>
+</body>
+</html>
