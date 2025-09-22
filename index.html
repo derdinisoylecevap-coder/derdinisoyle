@@ -106,7 +106,7 @@
       width: 100%;
       max-width: 768px;
       gap: 10px;
-      margin-left: -2cm; /* 2 cm sola kaydırıldı */
+      margin: 0 auto; /* ortalanır */
     }
 
     /* Başlık */
@@ -177,7 +177,7 @@
       margin-top: 12px;
       width: 100%;
       max-width: 768px;
-      margin-left: -2cm; /* mesaj kutusuyla aynı sola kayma */
+      margin: 0 auto; /* ortalanır */
     }
     #email-box input {
       width: 100%;
@@ -217,6 +217,17 @@
     }
     .message.success { color: var(--accent); }
     .message.error { color: var(--err); }
+
+    /* Mobil uyum */
+    @media (max-width: 600px) {
+      .input-container h1 {
+        font-size: 20px;
+        top: -0.7cm;
+      }
+      .input-container textarea {
+        font-size: 14px;
+      }
+    }
   </style>
 </head>
 <body>
